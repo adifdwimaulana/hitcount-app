@@ -11,7 +11,7 @@ import cookie from 'react-cookies'
 
 import { fetchLogin, RESET_LOGIN } from '../../../redux/actions/users/auth'
 
-class SignIn1 extends React.Component {
+class Login extends React.Component {
     constructor(props){
         super(props)
 
@@ -105,4 +105,4 @@ const mapDispatchToProps = dispatch => {
     }
 }
 
-export default connect(mapStateToProps, {...mapDispatchToProps, fetchLogin})(SignIn1);
+export default connect(mapStateToProps, {...mapDispatchToProps, fetchLogin})(Login);

@@ -84,7 +84,7 @@ class AdminLayout extends Component {
                                             <Suspense fallback={<Loader/>}>
                                                 <Switch>
                                                     {menu}
-                                                    <Redirect from="/" to="/dashboard" />
+                                                    <Redirect from="/" to="/devices" />
                                                 </Switch>
                                             </Suspense>
                                         </div>

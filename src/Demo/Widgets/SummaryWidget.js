@@ -15,7 +15,7 @@ const propTypes = {
 
 const defaultProps = {
     title: 'Daily Transaction',
-    value: 'Rp. 249.95',
+    value: 0,
     color: 'green',
     icon: 'icon-arrow-up',
     link: DEMO.BLANK_LINK

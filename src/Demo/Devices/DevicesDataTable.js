@@ -43,7 +43,7 @@ const data = [
     }
 ]
 
-class ApprovalDataTable extends React.Component {
+class DevicesDataTable extends React.Component {
     constructor(props){
         super(props)
 
@@ -52,6 +52,14 @@ class ApprovalDataTable extends React.Component {
 
     componentWillMount = () => {
         
+    }
+
+    toggleOpenAdd = () => {
+        this.setState({ modalAdd: !this.state.modalAdd })
+    }
+    
+    toggleCloseAdd = () => {
+        this.setState({ modalAdd: !this.state.modalAdd })
     }
 
     toggleOpenDetail = (row) => {
@@ -68,31 +76,31 @@ class ApprovalDataTable extends React.Component {
         })
     }
 
-    toggleOpenAccept = (row) => {
+    toggleOpenAssign = (row) => {
         this.setState({
             data: row,
-            modalAccept: !this.state.modalAccept
+            modalAssign: !this.state.modalAssign
         })
     }
 
-    toggleCloseAccept = () => {
+    toggleCloseAssign = () => {
         this.setState({
             data: null,
-            modalAccept: !this.state.modalAccept
+            modalAssign: !this.state.modalAssign
         })
     }
 
-    toggleOpenReject = (row) => {
+    toggleOpenDelete = (row) => {
         this.setState({
             data: row,
-            modalReject: !this.state.modalReject
+            modalDelete: !this.state.modalDelete
         })
     }
 
-    toggleCloseReject = () => {
+    toggleCloseDelete = () => {
         this.setState({
             data: null,
-            modalReject: !this.state.modalReject
+            modalDelete: !this.state.modalDelete
         })
     }
 
@@ -104,12 +112,21 @@ class ApprovalDataTable extends React.Component {
 
     }
 
+    customBtnGroup = (props) => {
+        return(
+            <div>
+                <Button onClick={() => this.toggleOpenAdd()} variant="primary"><i className="fa fa-plus"></i>&nbsp;Add New Device</Button>
+                { props.exportCSVBtn }
+            </div>
+        )
+    }
+
     ActionFormatter = (cell, row) => {
         return(
             <div>
                 <Button onClick={() => this.toggleOpenDetail(row)} size="sm" variant="primary"><i className="fa fa-info"></i>Detail</Button>
-                <Button onClick={() => this.toggleOpenAccept(row)} size="sm" variant="success"><i className="fa fa-check"></i>Accept</Button>
-                <Button onClick={() => this.toggleOpenReject(row)} size="sm" variant="danger"><i className="fa fa-ban"></i>Reject</Button>
+                <Button onClick={() => this.toggleOpenAssign(row)} size="sm" variant="warning"><i className="fa fa-user"></i>Assign</Button>
+                <Button onClick={() => this.toggleOpenDelete(row)} size="sm" variant="danger"><i className="fa fa-trash"></i>Delete</Button>
             </div>
         )
     }
@@ -122,12 +139,22 @@ class ApprovalDataTable extends React.Component {
         }
     }
 
-    dateFormatter = (cell) => {
-        return moment(cell).format('DD-MM-YYYY')
-    }
-
     expandableRow = (row) => {
         return false
+    }
+
+    indexN = (cell, row, enumObject, index) => {
+        return (<div>{index+1}</div>) 
+    }
+
+    dateFormat = (cell, row) => {
+        let time = cell.split(' : ')
+        return time[0]
+    }
+
+    timeFormat = (cell, row) => {
+        let time = cell.split(' : ')
+        return time[1]
     }
 
     showTable = () => {
@@ -143,7 +170,7 @@ class ApprovalDataTable extends React.Component {
             sizePerPage: 30,
             btnGroup: this.customBtnGroup,
             expandBy: 'column',
-            noDataText: 'No task(s) found. Please check or input a new task',
+            noDataText: 'No device(s) found. Please check or input a new device',
         }
 
         const selectRow = {
@@ -153,21 +180,23 @@ class ApprovalDataTable extends React.Component {
         }
 
         return(
-                <BootstrapTable data={data} version="4" striped hover pagination search searchPlaceholder={"Search by name, type, or applicant..."} edit options={options} selectRow={selectRow} exportCSV={true} csvFileName={this.fileNameFormat} expandableRow={this.expandableRow} expandComponent={this.expandComponent} expandColumnOptions={{expandColumnVisible: false}}>
-                    <TableHeaderColumn dataField="id" isKey dataSort csvHeader="ID" hidden searchable={false}>ID</TableHeaderColumn>
-                    <TableHeaderColumn dataField="no" dataSort sortFunc={this.numericSortFunc.bind(this)} csvHeader="No" thStyle={ { whiteSpace: 'normal' } } tdStyle={ { whiteSpace: 'normal' } } width="5%" searchable={false}>No</TableHeaderColumn>
-                    <TableHeaderColumn dataField="name" dataSort csvHeader="Name" thStyle={ { whiteSpace: 'normal' } } tdStyle={ { whiteSpace: 'normal' } } searchable width="15%">Name</TableHeaderColumn>
-                    <TableHeaderColumn dataField="type" dataSort csvHeader="Type" thStyle={ { whiteSpace: 'normal' } } tdStyle={ { whiteSpace: 'normal' } } searchable width="20%">Type</TableHeaderColumn>
-                    <TableHeaderColumn dataField="applicant" dataSort csvHeader="Applicant" thStyle={ { whiteSpace: 'normal' } } tdStyle={ { whiteSpace: 'normal' } } searchable width="15%">Applicant</TableHeaderColumn>
-                    <TableHeaderColumn dataField="date" dataFormat={this.dateFormatter.bind(this)} dataSort csvHeader="Date" thStyle={ { whiteSpace: 'normal' } } tdStyle={ { whiteSpace: 'normal' } } searchable width="15%">Date</TableHeaderColumn>
-                    <TableHeaderColumn dataField="amount" dataSort csvHeader="Amount" thStyle={ { whiteSpace: 'normal' } } tdStyle={ { whiteSpace: 'normal' } } searchable={false} width="15%">Amount</TableHeaderColumn>
-                    <TableHeaderColumn dataAlign="center" dataField='action' export={false} dataFormat={ this.ActionFormatter.bind(this) } thStyle={ { whiteSpace: 'normal', width: 400 } } tdStyle={ { whiteSpace: 'normal', width: 400 } } searchable={false} expandable={ false }>Action</TableHeaderColumn>
-                </BootstrapTable>
+                <BootstrapTable data={this.props.data} version="4" striped hover pagination search searchPlaceholder={"Search by device id or timestamp..."} edit options={options} selectRow={selectRow} exportCSV={true} csvFileName={this.fileNameFormat} expandableRow={this.isExpandableRow} expandComponent={this.expandComponent} expandColumnOptions={{expandColumnVisible: false}} >
+                <TableHeaderColumn dataField="id" isKey dataSort csvHeader="ID" hidden searchable={false}>ID</TableHeaderColumn>
+                <TableHeaderColumn dataField="any" dataSort dataFormat={this.indexN} csvHeader="No" thStyle={ { whiteSpace: 'normal' } } tdStyle={ { whiteSpace: 'normal' } } width="5%" searchable={false}>No</TableHeaderColumn>
+                <TableHeaderColumn dataField="id" dataSort csvHeader="Device ID" thStyle={ { whiteSpace: 'normal' } } tdStyle={ { whiteSpace: 'normal' } } searchable width="15%">Device ID</TableHeaderColumn>
+                <TableHeaderColumn dataField="Time" dataSort csvHeader="Date" dataFormat={this.dateFormat} thStyle={ { whiteSpace: 'normal' } } tdStyle={ { whiteSpace: 'normal' } } searchable width="10%">Date</TableHeaderColumn>
+                <TableHeaderColumn dataField="Time" dataSort csvHeader="Time" dataFormat={this.timeFormat} thStyle={ { whiteSpace: 'normal' } } tdStyle={ { whiteSpace: 'normal' } } searchable width="10%">Time</TableHeaderColumn>
+                <TableHeaderColumn dataField="Counter" dataSort csvHeader="Counter" thStyle={ { whiteSpace: 'normal' } } tdStyle={ { whiteSpace: 'normal' } } searchable>Counter</TableHeaderColumn>
+                <TableHeaderColumn dataField="Number" dataSort csvHeader="Number" thStyle={ { whiteSpace: 'normal' } } tdStyle={ { whiteSpace: 'normal' } } searchable={false}>Number</TableHeaderColumn>
+                <TableHeaderColumn dataField="postingTime" dataSort csvHeader="Posting Time" thStyle={ { whiteSpace: 'normal' } } tdStyle={ { whiteSpace: 'normal' } } searchable={false} width="10%">Posting Time</TableHeaderColumn>
+                <TableHeaderColumn dataField="readingTime" dataSort csvHeader="Reading Time" thStyle={ { whiteSpace: 'normal' } } tdStyle={ { whiteSpace: 'normal' } } searchable={false} width="10%">Reading Time</TableHeaderColumn>
+                <TableHeaderColumn dataAlign="center" dataField='action' export={false} dataFormat={ this.ActionFormatter.bind(this) } thStyle={ { whiteSpace: 'normal', width: 400 } } tdStyle={ { whiteSpace: 'normal', width: 400 } } searchable={false} expandable={ false }>Action</TableHeaderColumn>
+            </BootstrapTable>
         )
     }
 
     render(){
-        const { modalDetail, modalAccept, modalReject } = this.state
+        const { modalDetail, modalAssign, modalDelete } = this.state
 
         return(
             <div>
@@ -180,7 +209,7 @@ class ApprovalDataTable extends React.Component {
                     </Modal.Header>
                     <Modal.Body>Woohoo, you're reading this text in a modal!</Modal.Body>
                     <Modal.Footer>
-                    <Button variant="secondary" size="sm" className="mr-auto" onClick={this.toggleCloseAccept}>
+                    <Button variant="secondary" size="sm" className="mr-auto" onClick={this.toggleCloseAssign}>
                         Close
                     </Button>
                     <Button variant="danger" size="sm" onClick={this.handleReject}>
@@ -192,14 +221,14 @@ class ApprovalDataTable extends React.Component {
                     </Modal.Footer>
                 </Modal>
 
-                {/* Modal Accept */}
-                <Modal show={modalAccept} onHide={this.toggleCloseAccept}>
+                {/* Modal Assign */}
+                <Modal show={modalAssign} onHide={this.toggleCloseAssign}>
                     <Modal.Header closeButton>
                     <Modal.Title>Accept Task</Modal.Title>
                     </Modal.Header>
                     <Modal.Body>Woohoo, you're reading this text in a modal!</Modal.Body>
                     <Modal.Footer>
-                    <Button variant="secondary" size="sm" onClick={this.toggleCloseAccept}>
+                    <Button variant="secondary" size="sm" onClick={this.toggleCloseAssign}>
                         Close
                     </Button>
                     <Button variant="success" size="sm" onClick={this.handleAccept}>
@@ -208,14 +237,14 @@ class ApprovalDataTable extends React.Component {
                     </Modal.Footer>
                 </Modal>
 
-                {/* Modal Reject */}
-                <Modal show={modalReject} onHide={this.toggleCloseReject}>
+                {/* Modal Delete */}
+                <Modal show={modalDelete} onHide={this.toggleCloseDelete}>
                     <Modal.Header closeButton>
                     <Modal.Title>Reject Task</Modal.Title>
                     </Modal.Header>
                     <Modal.Body>Woohoo, you're reading this text in a modal!</Modal.Body>
                     <Modal.Footer>
-                    <Button variant="secondary" size="sm" onClick={this.toggleCloseReject}>
+                    <Button variant="secondary" size="sm" onClick={this.toggleCloseDelete}>
                         Close
                     </Button>
                     <Button variant="danger" size="sm" onClick={this.handleReject}>
@@ -228,4 +257,4 @@ class ApprovalDataTable extends React.Component {
     }
 }
 
-export default ApprovalDataTable
+export default DevicesDataTable

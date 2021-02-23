@@ -1,47 +1,13 @@
 import React from 'react'
-import { Row, Col, Card, Table, Button, Modal } from 'react-bootstrap';
+import { Row, Col, Card, Table, Button, Modal, Form } from 'react-bootstrap';
 import { BootstrapTable, TableHeaderColumn } from 'react-bootstrap-table'
 import moment from 'moment'
+import cookie from 'react-cookies'
 import { connect } from 'react-redux'
+import { toast } from 'react-toastify'
+import { db } from '../../config/firebaseConfig'
 
-const data = [
-    {
-        id: 1,
-        no: 1,
-        name: "Adif Dwi Maulana",
-        type: "Penerbitan",
-        applicant: "Bank Mandiri",
-        date: new Date(),
-        amount: "15.000.000",
-    },
-    {
-        id: 2,
-        no: 2,
-        name: "Edi Guerero",
-        type: "Penerbitan",
-        applicant: "Bank Mandiri",
-        date: new Date(),
-        amount: "15.000.000",
-    },
-    {
-        id: 3,
-        no: 3,
-        name: "Farhan Arif",
-        type: "Penerbitan",
-        applicant: "Bank Mandiri",
-        date: new Date(),
-        amount: "15.000.000",
-    },
-    {
-        id: 4,
-        no: 4,
-        name: "Dika Pratama",
-        type: "Penerbitan",
-        applicant: "Bank Mandiri",
-        date: new Date(),
-        amount: "15.000.000",
-    }
-]
+import { fetchDevice } from '../../redux/actions/devices/list'
 
 class DevicesDataTable extends React.Component {
     constructor(props){
@@ -59,7 +25,11 @@ class DevicesDataTable extends React.Component {
     }
     
     toggleCloseAdd = () => {
-        this.setState({ modalAdd: !this.state.modalAdd })
+        this.setState({
+            name: '',
+            counter: 0,
+            modalAdd: !this.state.modalAdd
+        })
     }
 
     toggleOpenDetail = (row) => {
@@ -124,9 +94,15 @@ class DevicesDataTable extends React.Component {
     ActionFormatter = (cell, row) => {
         return(
             <div>
-                <Button onClick={() => this.toggleOpenDetail(row)} size="sm" variant="primary"><i className="fa fa-info"></i>Detail</Button>
-                <Button onClick={() => this.toggleOpenAssign(row)} size="sm" variant="warning"><i className="fa fa-user"></i>Assign</Button>
-                <Button onClick={() => this.toggleOpenDelete(row)} size="sm" variant="danger"><i className="fa fa-trash"></i>Delete</Button>
+                {
+                    cookie.load('isAdmin') == "true" ?
+                    <div>
+                        <Button onClick={() => this.toggleOpenDetail(row)} size="sm" variant="primary"><i className="fa fa-info"></i>Detail</Button>
+                        <Button onClick={() => this.toggleOpenAssign(row)} size="sm" variant="warning"><i className="fa fa-user"></i>Assign</Button>
+                        <Button onClick={() => this.toggleOpenDelete(row)} size="sm" variant="danger"><i className="fa fa-trash"></i>Delete</Button>
+                    </div> :
+                    <Button onClick={() => this.toggleOpenDetail(row)} size="sm" variant="primary"><i className="fa fa-info"></i>Detail</Button>
+                }
             </div>
         )
     }
@@ -143,10 +119,6 @@ class DevicesDataTable extends React.Component {
         return false
     }
 
-    indexN = (cell, row, enumObject, index) => {
-        return (<div>{index+1}</div>) 
-    }
-
     dateFormat = (cell, row) => {
         let time = cell.split(' : ')
         return time[0]
@@ -155,6 +127,30 @@ class DevicesDataTable extends React.Component {
     timeFormat = (cell, row) => {
         let time = cell.split(' : ')
         return time[1]
+    }
+
+    handleAdd = () => {
+        const { name, counter } = this.state
+        const { dataDevice } = this.props
+
+        if(dataDevice.filter(x=>x.id.toLowerCase() == name.toLowerCase()).length > 0){
+            return toast.error("Device name already registered!")
+        } else {
+            db.ref(`/devices/${name}`).update({
+                id: name,
+                Counter: counter,
+                Time: moment(new Date()).format("YYYY-MM-DD : HH:mm:ss"),
+                postingTime: 2,
+                readingTime: 200,
+                Number: 2147483647,
+                assigned: false
+            }).then(() => {
+                this.toggleCloseAdd()
+                return toast.success("Device successfully Added")
+            }).catch(error => {
+                return toast.error(error.message)
+            })
+        }
     }
 
     showTable = () => {
@@ -180,9 +176,9 @@ class DevicesDataTable extends React.Component {
         }
 
         return(
-                <BootstrapTable data={this.props.data} version="4" striped hover pagination search searchPlaceholder={"Search by device id or timestamp..."} edit options={options} selectRow={selectRow} exportCSV={true} csvFileName={this.fileNameFormat} expandableRow={this.isExpandableRow} expandComponent={this.expandComponent} expandColumnOptions={{expandColumnVisible: false}} >
+            <BootstrapTable data={this.props.data} version="4" striped hover pagination search searchPlaceholder={"Search by device id or timestamp..."} edit options={options} selectRow={selectRow} exportCSV={true} csvFileName={this.fileNameFormat} expandableRow={this.isExpandableRow} expandComponent={this.expandComponent} expandColumnOptions={{expandColumnVisible: false}} >
                 <TableHeaderColumn dataField="id" isKey dataSort csvHeader="ID" hidden searchable={false}>ID</TableHeaderColumn>
-                <TableHeaderColumn dataField="any" dataSort dataFormat={this.indexN} csvHeader="No" thStyle={ { whiteSpace: 'normal' } } tdStyle={ { whiteSpace: 'normal' } } width="5%" searchable={false}>No</TableHeaderColumn>
+                <TableHeaderColumn dataField="no" dataSort csvHeader="No" thStyle={ { whiteSpace: 'normal' } } tdStyle={ { whiteSpace: 'normal' } } width="5%" searchable={false}>No</TableHeaderColumn>
                 <TableHeaderColumn dataField="id" dataSort csvHeader="Device ID" thStyle={ { whiteSpace: 'normal' } } tdStyle={ { whiteSpace: 'normal' } } searchable width="15%">Device ID</TableHeaderColumn>
                 <TableHeaderColumn dataField="Time" dataSort csvHeader="Date" dataFormat={this.dateFormat} thStyle={ { whiteSpace: 'normal' } } tdStyle={ { whiteSpace: 'normal' } } searchable width="10%">Date</TableHeaderColumn>
                 <TableHeaderColumn dataField="Time" dataSort csvHeader="Time" dataFormat={this.timeFormat} thStyle={ { whiteSpace: 'normal' } } tdStyle={ { whiteSpace: 'normal' } } searchable width="10%">Time</TableHeaderColumn>
@@ -196,27 +192,36 @@ class DevicesDataTable extends React.Component {
     }
 
     render(){
-        const { modalDetail, modalAssign, modalDelete } = this.state
+        const { modalAdd, modalAssign, modalDelete, name, counter } = this.state
 
         return(
             <div>
                 {this.showTable()}
 
-                {/* Modal Detail */}
-                <Modal show={modalDetail} onHide={this.toggleCloseDetail}>
+                {/* Modal Add */}
+                <Modal show={modalAdd} onHide={this.toggleCloseAdd}>
                     <Modal.Header closeButton>
-                    <Modal.Title>Task Detail</Modal.Title>
+                    <Modal.Title>Add New Device</Modal.Title>
                     </Modal.Header>
-                    <Modal.Body>Woohoo, you're reading this text in a modal!</Modal.Body>
+                    <Modal.Body>
+                        <Form>
+                            <Form.Group controlId="name">
+                                <Form.Label>Device Name</Form.Label>
+                                <Form.Control type="text" placeholder="Device-01" onChange={e => this.setState({name: e.target.value})} value={name} autoComplete="off" required />
+                            </Form.Group>
+
+                            <Form.Group controlId="counter">
+                                <Form.Label>Current Counter</Form.Label>
+                                <Form.Control type="number" placeholder="0-255" onChange={e => this.setState({counter: e.target.value})} value={counter} autoComplete="off" required />
+                            </Form.Group>
+                        </Form>
+                    </Modal.Body>
                     <Modal.Footer>
-                    <Button variant="secondary" size="sm" className="mr-auto" onClick={this.toggleCloseAssign}>
+                    <Button variant="secondary" size="sm" onClick={this.toggleCloseAdd}>
                         Close
                     </Button>
-                    <Button variant="danger" size="sm" onClick={this.handleReject}>
-                        Reject
-                    </Button>
-                    <Button variant="success" size="sm" onClick={this.handleAccept}>
-                        Accept
+                    <Button variant="success" size="sm" disabled={!name || !counter} onClick={this.handleAdd}>
+                        Submit
                     </Button>
                     </Modal.Footer>
                 </Modal>
@@ -228,10 +233,10 @@ class DevicesDataTable extends React.Component {
                     </Modal.Header>
                     <Modal.Body>Woohoo, you're reading this text in a modal!</Modal.Body>
                     <Modal.Footer>
-                    <Button variant="secondary" size="sm" onClick={this.toggleCloseAssign}>
+                    <Button variant="secondary" size="sm" onClick={this.toggleCloseAdd}>
                         Close
                     </Button>
-                    <Button variant="success" size="sm" onClick={this.handleAccept}>
+                    <Button variant="success" size="sm" onClick={this.handleAdd}>
                         Accept
                     </Button>
                     </Modal.Footer>
@@ -257,4 +262,12 @@ class DevicesDataTable extends React.Component {
     }
 }
 
-export default DevicesDataTable
+const mapStateToProps = state => {
+    return {
+        dataDevice: state.deviceStore.dataDevice,
+        deviceDetail: state.deviceStore.deviceDetail,
+        deviceProgress: state.deviceStore.inProgress
+    }
+}
+
+export default connect(mapStateToProps, {fetchDevice})(DevicesDataTable)

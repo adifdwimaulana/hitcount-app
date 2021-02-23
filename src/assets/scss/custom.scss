@@ -1,0 +1,68 @@
+.vertical-center {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  margin: 0;
+}
+  
+.horizontal-center {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  margin: 0;
+}
+
+.vh-center {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+}
+
+// Custom scss
+.nav-logo {
+  width: 140px;
+  display: block;
+  margin-left: auto;
+  margin: 0;
+}
+
+.logo-title {
+  // font-size: 16px;
+  font-weight: 300;
+  letter-spacing: 1.2px;
+  text-align: center;
+  color: #fff;
+  margin: 4px 0;
+}
+
+.chip {
+    margin: 0 4px;
+    padding: 4px 32px;
+    border-radius: 25px;
+    font-weight: 300;
+    cursor: pointer;
+    display: inline-block;
+}
+
+.tab-content {
+    box-shadow: none;
+}
+
+.btn-action {
+  padding: 4px 10px;
+}
+
+.table-striped tbody tr:nth-of-type(2n+1) {
+  background-color: transparent !important;
+}
+
+.table-striped tbody tr:nth-of-type(odd) {
+  background-color: transparent !important;
+}
+
+
+.table-striped tbody tr:nth-of-type(even) {
+  background-color: rgba(0, 0, 0, 0.05);
+}

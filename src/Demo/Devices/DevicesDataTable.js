@@ -3,11 +3,13 @@ import { Row, Col, Card, Table, Button, Modal, Form } from 'react-bootstrap';
 import { BootstrapTable, TableHeaderColumn } from 'react-bootstrap-table'
 import moment from 'moment'
 import cookie from 'react-cookies'
+import Select from 'react-select'
 import { connect } from 'react-redux'
 import { toast } from 'react-toastify'
 import { db } from '../../config/firebaseConfig'
 
 import { fetchDevice } from '../../redux/actions/devices/list'
+import { fetchUsers } from '../../redux/actions/users/list'
 
 class DevicesDataTable extends React.Component {
     constructor(props){
@@ -17,7 +19,7 @@ class DevicesDataTable extends React.Component {
     }
 
     componentWillMount = () => {
-        
+        this.props.fetchUsers()
     }
 
     toggleOpenAdd = () => {
@@ -49,6 +51,7 @@ class DevicesDataTable extends React.Component {
     toggleOpenAssign = (row) => {
         this.setState({
             data: row,
+            selectedUser: {label: row.pic, value: row.pic},
             modalAssign: !this.state.modalAssign
         })
     }
@@ -56,6 +59,7 @@ class DevicesDataTable extends React.Component {
     toggleCloseAssign = () => {
         this.setState({
             data: null,
+            selectedUser: null,
             modalAssign: !this.state.modalAssign
         })
     }
@@ -72,14 +76,6 @@ class DevicesDataTable extends React.Component {
             data: null,
             modalDelete: !this.state.modalDelete
         })
-    }
-
-    handleAccept = () => {
-
-    }
-
-    handleReject = () => {
-
     }
 
     customBtnGroup = (props) => {
@@ -129,6 +125,12 @@ class DevicesDataTable extends React.Component {
         return time[1]
     }
 
+    handleChangUser = (selectedUser) => {
+        const { data } = this.state
+
+        this.setState({ selectedUser })
+    }
+
     handleAdd = () => {
         const { name, counter } = this.state
         const { dataDevice } = this.props
@@ -136,6 +138,7 @@ class DevicesDataTable extends React.Component {
         if(dataDevice.filter(x=>x.id.toLowerCase() == name.toLowerCase()).length > 0){
             return toast.error("Device name already registered!")
         } else {
+            this.setState({isAdding: true})
             db.ref(`/devices/${name}`).update({
                 id: name,
                 Counter: counter,
@@ -145,12 +148,63 @@ class DevicesDataTable extends React.Component {
                 Number: 2147483647,
                 assigned: false
             }).then(() => {
+                this.setState({isAdding: false})
                 this.toggleCloseAdd()
                 return toast.success("Device successfully Added")
             }).catch(error => {
+                this.setState({isAdding: false})
                 return toast.error(error.message)
             })
         }
+    }
+
+    handleAssign = () => {
+        const { selectedUser, data } = this.state
+        const id = data.id
+
+        db.ref(`/users`).once('value', snap => {
+            let data = []
+            let arr_obj = Object.keys(snap.val()).map(key => ({ [key]: snap.val()[key] }))
+            
+            arr_obj.forEach((result, index) => {
+                let Obj = Object.assign(result[Object.keys(result)], {key: Object.keys(result)[0]})
+                data.push(Obj)
+            })
+
+            this.setState({isAssigning: true})
+            data.forEach((result, index) => {
+                if(result.email == selectedUser.label){
+                    db.ref(`/devices/${id}`).update({
+                        pic: selectedUser.label
+                    }).then(() => {
+                        this.setState({isAssigning: false})
+                        this.toggleCloseAssign()
+                        return toast.success("Device assigned successfully!")
+                    }).catch(error => {
+                        this.setState({isAssigning: false})
+                        return toast.error(error.message)
+                    })
+                }
+            })
+        })
+    }
+
+    handleDelete = () => {
+        const { data } = this.state
+        const id = data.id
+
+        this.setState({isDeleting: true})
+        db.ref(`/devices/${id}`)
+            .remove().then(() => {
+                this.setState({isDeleting: false})
+
+                this.toggleCloseDelete()
+                return toast.success("Device successfully deleted!")
+            }).catch(error => {
+                this.setState({isDeleting: false})
+
+                return toast.error(error.message)
+            })
     }
 
     showTable = () => {
@@ -192,8 +246,10 @@ class DevicesDataTable extends React.Component {
     }
 
     render(){
-        const { modalAdd, modalAssign, modalDelete, name, counter } = this.state
-
+        const { modalAdd, modalAssign, modalDelete, isAdding, isAssigning, isDeleting, name, counter, data, selectedUser } = this.state
+        const { users, userProgress } = this.props
+        console.log(users)
+        console.log(data)
         return(
             <div>
                 {this.showTable()}
@@ -220,7 +276,7 @@ class DevicesDataTable extends React.Component {
                     <Button variant="secondary" size="sm" onClick={this.toggleCloseAdd}>
                         Close
                     </Button>
-                    <Button variant="success" size="sm" disabled={!name || !counter} onClick={this.handleAdd}>
+                    <Button variant="success" size="sm" disabled={!name || !counter || isAdding} onClick={this.handleAdd}>
                         Submit
                     </Button>
                     </Modal.Footer>
@@ -229,15 +285,22 @@ class DevicesDataTable extends React.Component {
                 {/* Modal Assign */}
                 <Modal show={modalAssign} onHide={this.toggleCloseAssign}>
                     <Modal.Header closeButton>
-                    <Modal.Title>Accept Task</Modal.Title>
+                    <Modal.Title>Assign Device</Modal.Title>
                     </Modal.Header>
-                    <Modal.Body>Woohoo, you're reading this text in a modal!</Modal.Body>
+                    <Modal.Body>
+                        <Form>
+                            <Form.Group controlId="pic">
+                                <Form.Label>Assigned to</Form.Label>
+                                <Select options={users} onChange={this.handleChangUser} value={selectedUser} isClearable />
+                            </Form.Group>
+                        </Form>
+                    </Modal.Body>
                     <Modal.Footer>
-                    <Button variant="secondary" size="sm" onClick={this.toggleCloseAdd}>
+                    <Button variant="secondary" size="sm" onClick={this.toggleCloseAssign}>
                         Close
                     </Button>
-                    <Button variant="success" size="sm" onClick={this.handleAdd}>
-                        Accept
+                    <Button variant="success" size="sm" disabled={!selectedUser || isAssigning} onClick={this.handleAssign}>
+                        Submit
                     </Button>
                     </Modal.Footer>
                 </Modal>
@@ -245,15 +308,15 @@ class DevicesDataTable extends React.Component {
                 {/* Modal Delete */}
                 <Modal show={modalDelete} onHide={this.toggleCloseDelete}>
                     <Modal.Header closeButton>
-                    <Modal.Title>Reject Task</Modal.Title>
+                    <Modal.Title>Delete {data ? data.id : null}</Modal.Title>
                     </Modal.Header>
-                    <Modal.Body>Woohoo, you're reading this text in a modal!</Modal.Body>
+                    <Modal.Body>Are you sure want to delete this device ?</Modal.Body>
                     <Modal.Footer>
                     <Button variant="secondary" size="sm" onClick={this.toggleCloseDelete}>
                         Close
                     </Button>
-                    <Button variant="danger" size="sm" onClick={this.handleReject}>
-                        Reject
+                    <Button variant="danger" size="sm" disabled={isDeleting} onClick={this.handleDelete}>
+                        Delete
                     </Button>
                     </Modal.Footer>
                 </Modal>
@@ -266,8 +329,11 @@ const mapStateToProps = state => {
     return {
         dataDevice: state.deviceStore.dataDevice,
         deviceDetail: state.deviceStore.deviceDetail,
-        deviceProgress: state.deviceStore.inProgress
+        deviceProgress: state.deviceStore.inProgress,
+
+        users: state.userStore.users,
+        userProgress: state.userStore.inProgress
     }
 }
 
-export default connect(mapStateToProps, {fetchDevice})(DevicesDataTable)
+export default connect(mapStateToProps, {fetchDevice, fetchUsers})(DevicesDataTable)

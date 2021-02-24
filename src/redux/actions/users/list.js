@@ -18,16 +18,10 @@ export function fetchUsers(){
 			arr_obj.forEach((result, index) => {
 				data.push(result[Object.keys(result)])
 			})
-			data.forEach((result, index) => {
-                list.push({
-                    label: result.email,
-                    value: result.email
-                })
-            })
 
             dispatch({
                 type: RECEIVE_USERS,
-                payload: list
+                payload: data
             })
         })
     }

@@ -20,7 +20,7 @@ export function fetchDevice(id){
                 let data = []
                 let filter = []
                 let arr_obj = Object.keys(snap.val()).map(key => ({ [key]: snap.val()[key] }))
-                console.log(arr_obj)
+
                 arr_obj.forEach((result, index) => {
                     data.push(result[Object.keys(result)])
                 })

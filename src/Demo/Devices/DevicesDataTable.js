@@ -244,7 +244,7 @@ class DevicesDataTable extends React.Component {
 
     render(){
         const { modalAdd, modalAssign, modalDelete, isAdding, isAssigning, isDeleting, name, counter, data, selectedUser } = this.state
-        const { users, userProgress } = this.props
+        const { users, userOptions, userProgress } = this.props
 
         return(
             <div>
@@ -287,7 +287,7 @@ class DevicesDataTable extends React.Component {
                         <Form>
                             <Form.Group controlId="pic">
                                 <Form.Label>Assigned to</Form.Label>
-                                <Select options={users} onChange={this.handleChangUser} value={selectedUser} isClearable />
+                                <Select className="input-select" options={userOptions} onChange={this.handleChangUser} value={selectedUser} isClearable />
                             </Form.Group>
                         </Form>
                     </Modal.Body>
@@ -328,6 +328,7 @@ const mapStateToProps = state => {
         deviceProgress: state.deviceStore.inProgress,
 
         users: state.userStore.users,
+        userOptions: state.userStore.userOptions,
         userProgress: state.userStore.inProgress
     }
 }

@@ -19,10 +19,11 @@ export function fetchDevice(state = defaultState, action){
             return ({ deviceDetail: [], inProgress: true })
         case RECEIVE_DEVICE_DETAIL:
             var results = action.payload
+            var count = action.count
             var i = 1
             results.forEach((result) => result['no'] = i++)
 
-            return Object.assign({}, state, { deviceDetail: results, inProgress: false })
+            return Object.assign({}, state, { deviceDetail: results, count, inProgress: false })
         default:
             return state
     }

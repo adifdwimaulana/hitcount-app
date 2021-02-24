@@ -27,8 +27,6 @@ class Devices extends React.Component {
         const { activeTab } = this.state
         const { dataDevice, deviceDetail, deviceProgress } = this.props
 
-        console.log(dataDevice)
-
         return (
             <Aux>
                 <Row>

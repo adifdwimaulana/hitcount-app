@@ -35,10 +35,7 @@ class DevicesDataTable extends React.Component {
     }
 
     toggleOpenDetail = (row) => {
-        this.setState({
-            data: row,
-            modalDetail: !this.state.modalDetail
-        })
+        window.location.href += `/${row.id}`
     }
 
     toggleCloseDetail = () => {
@@ -233,7 +230,7 @@ class DevicesDataTable extends React.Component {
             <BootstrapTable data={this.props.data} version="4" striped hover pagination search searchPlaceholder={"Search by device id or timestamp..."} edit options={options} selectRow={selectRow} exportCSV={true} csvFileName={this.fileNameFormat} expandableRow={this.isExpandableRow} expandComponent={this.expandComponent} expandColumnOptions={{expandColumnVisible: false}} >
                 <TableHeaderColumn dataField="id" isKey dataSort csvHeader="ID" hidden searchable={false}>ID</TableHeaderColumn>
                 <TableHeaderColumn dataField="no" dataSort csvHeader="No" thStyle={ { whiteSpace: 'normal' } } tdStyle={ { whiteSpace: 'normal' } } width="5%" searchable={false}>No</TableHeaderColumn>
-                <TableHeaderColumn dataField="id" dataSort csvHeader="Device ID" thStyle={ { whiteSpace: 'normal' } } tdStyle={ { whiteSpace: 'normal' } } searchable width="15%">Device ID</TableHeaderColumn>
+                <TableHeaderColumn dataField="id" dataSort csvHeader="Device ID" thStyle={ { whiteSpace: 'normal' } } tdStyle={ { whiteSpace: 'normal' } } searchable width="15%">Device Name</TableHeaderColumn>
                 <TableHeaderColumn dataField="Time" dataSort csvHeader="Date" dataFormat={this.dateFormat} thStyle={ { whiteSpace: 'normal' } } tdStyle={ { whiteSpace: 'normal' } } searchable width="10%">Date</TableHeaderColumn>
                 <TableHeaderColumn dataField="Time" dataSort csvHeader="Time" dataFormat={this.timeFormat} thStyle={ { whiteSpace: 'normal' } } tdStyle={ { whiteSpace: 'normal' } } searchable width="10%">Time</TableHeaderColumn>
                 <TableHeaderColumn dataField="Counter" dataSort csvHeader="Counter" thStyle={ { whiteSpace: 'normal' } } tdStyle={ { whiteSpace: 'normal' } } searchable>Counter</TableHeaderColumn>
@@ -248,8 +245,7 @@ class DevicesDataTable extends React.Component {
     render(){
         const { modalAdd, modalAssign, modalDelete, isAdding, isAssigning, isDeleting, name, counter, data, selectedUser } = this.state
         const { users, userProgress } = this.props
-        console.log(users)
-        console.log(data)
+
         return(
             <div>
                 {this.showTable()}

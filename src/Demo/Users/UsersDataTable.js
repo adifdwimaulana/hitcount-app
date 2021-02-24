@@ -7,7 +7,7 @@ import cookie from 'react-cookies'
 import Select from 'react-select'
 import { connect } from 'react-redux'
 import { toast } from 'react-toastify'
-import { db, auth } from '../../config/firebaseConfig'
+import { db, auth, adminAuth } from '../../config/firebaseConfig'
 
 class UsersDataTable extends React.Component {
     constructor(props){
@@ -31,21 +31,24 @@ class UsersDataTable extends React.Component {
             lastName: '',
             email: '',
             password: '',
+            confirmPassword: '',
             role: null
         })
     }
 
-    toggleOpenChangePassword = () => {
+    toggleOpenChangePassword = (row) => {
         this.setState({
+            data: row,
             modalChangePassword: !this.state.modalChangePassword
         })
     }
 
-    toggleOpenChangePassword = () => {
+    toggleCloseChangePassword = () => {
         this.setState({
-            modalChangePassword: !this.state.modalChangePassword,
+            data: null,
             password: '',
-            confirmPassword: ''
+            confirmPassword: '',
+            modalChangePassword: !this.state.modalChangePassword,
         })
     }
 
@@ -65,7 +68,6 @@ class UsersDataTable extends React.Component {
 
     ActionFormatter = (cell, row) => {
         //eslint-disable-next-line
-        console.log(row)
         return(
             <div>
                 {
@@ -75,11 +77,11 @@ class UsersDataTable extends React.Component {
                             cookie.load('email') != row.email ? <Button className="mr-2" onClick={() => this.toggleOpenDelete(row)} size="sm" variant="danger"><i className="fa fa-trash"></i> Delete</Button> : null 
                         }
                         {
-                            cookie.load('email') == row.email ? <Button className="mr-2" onClick={() => this.toggleOpenChangePassword(row)} size="sm" variant="warning"><i className="fa fa-key"></i> Reset Password</Button> : null 
+                            cookie.load('email') == row.email ? <Button className="mr-2" onClick={() => this.toggleOpenChangePassword(row)} size="sm" variant="warning"><i className="fa fa-key"></i> Change Password</Button> : null 
                         }
                     </div> : <div>
                         {
-                            cookie.load('email') == row.email ? <Button className="mr-2" onClick={() => this.toggleOpenChangePassword(row)} size="sm" variant="warning"><i className="fa fa-key"></i> Reset Password</Button> : null 
+                            cookie.load('email') == row.email ? <Button className="mr-2" onClick={() => this.toggleOpenChangePassword(row)} size="sm" variant="warning"><i className="fa fa-key"></i> Change Password</Button> : "-" 
                         }
                     </div>
                 }
@@ -168,8 +170,57 @@ class UsersDataTable extends React.Component {
             })
     }
 
+    handleChangePassword = () => {
+        const { data, password, confirmPassword } = this.state
+
+        this.setState({isChanging: true})
+
+        auth.currentUser
+            .updatePassword(password)
+            .then(() => {
+                this.setState({isChanging: false})
+                this.toggleCloseChangePassword()
+
+                return toast.success("Password has been successfully changed!")
+            })
+            .catch(error => {
+                this.setState({isChanging: false})
+
+                return toast.error(error.message)
+            })
+    }
+
+    handleDelete = () => {
+        const { data } = this.state
+
+        this.setState({isDeleting: true})
+
+        db.ref(`/users/${data.uid}`)
+            .remove().then(() => {
+                this.setState({isDeleting: false})
+
+                this.toggleCloseDelete()
+                return toast.success("User successfully deleted!")
+            }).catch(error => {
+                this.setState({isDeleting: false})
+
+                return toast.error(error.message)
+            })
+
+        // adminAuth
+        //     .deleteUser(data.uid)
+        //     .then(() => {
+                
+        //     })
+        //     .catch(error => {
+        //         this.setState({isDeleting: false})
+
+        //         return toast.error(error.message)
+        //     })
+    }
+
     render(){
-        const { firstName, lastName, email, password, confirmPassword, role, 
+        const { firstName, lastName, email, password, confirmPassword, role, data,
                 modalAdd, modalChangePassword, modalDelete, isAdding, isChanging, isDeleting } = this.state
         return(
             <div>
@@ -229,35 +280,48 @@ class UsersDataTable extends React.Component {
                     </Modal.Footer>
                 </Modal>
 
-                {/* Modal Assign */}
-                {/* <Modal show={modalAssign} onHide={this.toggleCloseAssign}>
+                {/* Modal Change Password */}
+                <Modal show={modalChangePassword} onHide={this.toggleCloseChangePassword}>
                     <Modal.Header closeButton>
-                    <Modal.Title>Assign Device</Modal.Title>
+                    <Modal.Title>Change Password</Modal.Title>
                     </Modal.Header>
                     <Modal.Body>
                         <Form>
-                            <Form.Group controlId="pic">
-                                <Form.Label>Assigned to</Form.Label>
-                                <Select options={userOptions} onChange={this.handleChangUser} value={selectedUser} isClearable />
+                            <Form.Group controlId="email">
+                                <Form.Label>Email</Form.Label>
+                                <Form.Control type="email" value={data ? data.email : ''} disabled={true} autoComplete="off" />
+                            </Form.Group>
+
+                            <Form.Group controlId="password">
+                                <Form.Label>New Password</Form.Label>
+                                <Form.Control type="password" placeholder="Password" onChange={e => this.setState({password: e.target.value})} value={password} autoComplete="off" />
+                            </Form.Group>
+
+                            <Form.Group controlId="password">
+                                <Form.Label>Confirm New Password</Form.Label>
+                                <Form.Control type="password" placeholder="Password" onChange={e => this.setState({confirmPassword: e.target.value})} value={confirmPassword} autoComplete="off" />
+                                <Form.Text className="text-danger">
+                                    { password != "" && password !== confirmPassword ? "Password doesn't match!" : "" }
+                                </Form.Text>
                             </Form.Group>
                         </Form>
                     </Modal.Body>
                     <Modal.Footer>
-                    <Button variant="secondary" size="sm" onClick={this.toggleCloseAssign}>
+                    <Button variant="secondary" size="sm" onClick={this.toggleCloseChangePassword}>
                         Close
                     </Button>
-                    <Button variant="success" size="sm" disabled={!selectedUser || isAssigning} onClick={this.handleAssign}>
+                    <Button variant="success" size="sm" disabled={!password || !confirmPassword || isChanging} onClick={this.handleChangePassword}>
                         Submit
                     </Button>
                     </Modal.Footer>
-                </Modal> */}
+                </Modal>
 
                 {/* Modal Delete */}
-                {/* <Modal show={modalDelete} onHide={this.toggleCloseDelete}>
+                <Modal show={modalDelete} onHide={this.toggleCloseDelete}>
                     <Modal.Header closeButton>
-                    <Modal.Title>Delete {data ? data.id : null}</Modal.Title>
+                    <Modal.Title>Delete {data ? data.email : null}</Modal.Title>
                     </Modal.Header>
-                    <Modal.Body>Are you sure want to delete this device ?</Modal.Body>
+                    <Modal.Body>Are you sure want to delete this user ?</Modal.Body>
                     <Modal.Footer>
                     <Button variant="secondary" size="sm" onClick={this.toggleCloseDelete}>
                         Close
@@ -266,7 +330,7 @@ class UsersDataTable extends React.Component {
                         Delete
                     </Button>
                     </Modal.Footer>
-                </Modal> */}
+                </Modal>
             </div>
         )
     }

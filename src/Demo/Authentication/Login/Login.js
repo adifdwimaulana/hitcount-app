@@ -1,5 +1,5 @@
 import React from 'react';
-import { Route, Switch, Redirect } from 'react-router-dom';
+import { Route, Switch, Redirect, Link } from 'react-router-dom';
 import { Row, Col, Card, Button, Form } from 'react-bootstrap'
 import { ToastContainer, toast } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.min.css'
@@ -55,7 +55,9 @@ class Login extends React.Component {
                         <Card>
                             <Card.Body>
                                 <div className="mb-4 text-center">
-                                    <img src={logo} width={140} />
+                                    <Link to="/home">
+                                        <img src={logo} width={140} />
+                                    </Link>
                                 </div>
                                 <h3 className="mb-4 text-center">Hit Count Login</h3>
                                 <Form>

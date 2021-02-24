@@ -8,6 +8,7 @@ import './../../../assets/scss/style.scss'
 import Aux from "../../../hoc/_Aux"
 import { ClipLoader } from 'react-spinners'
 import cookie from 'react-cookies'
+import logo from '../../../assets/images/logo-hitcount.png'
 
 import { fetchLogin, RESET_LOGIN } from '../../../redux/actions/users/auth'
 
@@ -54,9 +55,9 @@ class Login extends React.Component {
                         <Card>
                             <Card.Body>
                                 <div className="mb-4 text-center">
-                                    <i className="feather icon-unlock auth-icon"/>
+                                    <img src={logo} width={140} />
                                 </div>
-                                <h3 className="mb-4 text-center">Login</h3>
+                                <h3 className="mb-4 text-center">Hit Count Login</h3>
                                 <Form>
                                     <Form.Group controlId="email">
                                         <Form.Label>Email address</Form.Label>

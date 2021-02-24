@@ -17,7 +17,6 @@ import * as actionTypes from "../../../store/actions";
 import * as API_LINKS from '../../../config/link';
 
 import { fetchLogin } from '../../../redux/actions/users/auth'
-import { fetchTask, fetchTasks } from '../../../redux/actions/tasks/list'
 
 import './app.scss';
 

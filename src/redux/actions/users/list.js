@@ -13,8 +13,8 @@ export function fetchUsers(){
             let data = []
             let list = []
             let arr_obj = Object.keys(snap.val()).map(key => ({ [key]: snap.val()[key] }))
-            console.log(arr_obj)
-			arr_obj.forEach((result, index) => {
+
+            arr_obj.forEach((result, index) => {
                 let Obj = {
                     uid: Object.keys(result)[0]
                 }

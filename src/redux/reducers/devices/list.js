@@ -19,11 +19,23 @@ export function fetchDevice(state = defaultState, action){
             return ({ deviceDetail: [], inProgress: true })
         case RECEIVE_DEVICE_DETAIL:
             var results = action.payload
-            var count = action.count
+            let list = []
+            var count = 0
+            var current = 0
             var i = 1
-            results.forEach((result) => result['no'] = i++)
+            results.forEach((result) => {
+                if(result.counter != current){
+                    list.push(result)
+                    current = result.counter
+                }
+            })
 
-            return Object.assign({}, state, { deviceDetail: results, count, inProgress: false })
+            list.forEach((l) => l['no'] = i++)            
+            count = list[0].counter - list[list.length - 1].counter
+
+            console.log(count)
+
+            return Object.assign({}, state, { deviceDetail: list, count, inProgress: false })
         default:
             return state
     }

@@ -7,6 +7,7 @@ import SummaryWidget from '../Widgets/SummaryWidget'
 import { BarLoader } from 'react-spinners'
 import { connect } from 'react-redux'
 import DateTimeRangeContainer from 'react-advanced-datetimerange-picker'
+import { BeatLoader } from 'react-spinners'
 
 import { fetchDevice, fetchDeviceRange } from '../../redux/actions/devices/list'
 
@@ -119,7 +120,7 @@ class DevicesDetail extends React.Component {
                             </Card.Header>
                             <Card.Body>
                                 {
-                                    !deviceProgress ? this.showTable() : <center><BarLoader color={'#123abc'} loading={deviceProgress} /></center>
+                                    deviceProgress ? <center><BeatLoader color={'#1de9b6'} loading={deviceProgress} /><br /> Loading.... Please wait...</center> : this.showTable()
                                 }
                             </Card.Body>
                         </Card>

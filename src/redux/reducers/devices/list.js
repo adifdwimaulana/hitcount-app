@@ -33,8 +33,6 @@ export function fetchDevice(state = defaultState, action){
             list.forEach((l) => l['no'] = i++)            
             count = list[0].counter - list[list.length - 1].counter
 
-            console.log(count)
-
             return Object.assign({}, state, { deviceDetail: list, count, inProgress: false })
         default:
             return state

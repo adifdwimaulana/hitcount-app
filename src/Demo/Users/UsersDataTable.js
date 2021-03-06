@@ -7,7 +7,7 @@ import cookie from 'react-cookies'
 import Select from 'react-select'
 import { connect } from 'react-redux'
 import { toast } from 'react-toastify'
-import { db, auth, adminAuth } from '../../config/firebaseConfig'
+import { db, auth } from '../../config/firebaseConfig'
 
 class UsersDataTable extends React.Component {
     constructor(props){

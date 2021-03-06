@@ -1,7 +1,5 @@
 import firebase from 'firebase'
 import * as admin from 'firebase-admin'
-// import serviceAccount from './hitcount-ecc5b-firebase-adminsdk-ponad-453127a0d0.json'
-const serviceAccount = require('./hitcount-ecc5b-firebase-adminsdk-ponad-453127a0d0.json')
 
 const firebaseConfig = {
     apiKey: "AIzaSyCJnobw7gQaxV45xgWMWHvGFzLeagyJ97M",
@@ -15,13 +13,8 @@ const firebaseConfig = {
 }
 
 firebase.initializeApp(firebaseConfig)
-admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
-    databaseURL: "https://hitcount-ecc5b-default-rtdb.firebaseio.com"
-})
 
 export const auth = firebase.auth()
 export const db = firebase.database()
 export const fs = firebase.firestore()
 export const store = firebase.storage()
-export const adminAuth = admin.auth()

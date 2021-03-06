@@ -48,9 +48,7 @@ class Devices extends React.Component {
                                 <Card.Title as='h5'>Devices Management</Card.Title>
                             </Card.Header>
                             <Card.Body>
-                                {
-                                    !deviceProgress ? <DevicesDataTable data={dataDevice} /> : <center><BarLoader color={'#123abc'} loading={deviceProgress} /></center>
-                                }
+                                <DevicesDataTable data={dataDevice} />
                             </Card.Body>
                         </Card>
                     </Col>

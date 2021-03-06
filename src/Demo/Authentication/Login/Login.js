@@ -55,7 +55,7 @@ class Login extends React.Component {
                         <Card>
                             <Card.Body>
                                 <div className="mb-4 text-center">
-                                    <Link to="/home">
+                                    <Link to="/">
                                         <img src={logo} width={140} />
                                     </Link>
                                 </div>

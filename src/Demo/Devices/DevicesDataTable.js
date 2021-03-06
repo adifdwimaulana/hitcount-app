@@ -7,6 +7,7 @@ import Select from 'react-select'
 import { connect } from 'react-redux'
 import { toast } from 'react-toastify'
 import { db } from '../../config/firebaseConfig'
+import { BeatLoader } from 'react-spinners'
 
 import { fetchDevice } from '../../redux/actions/devices/list'
 import { fetchUsers } from '../../redux/actions/users/list'
@@ -42,6 +43,23 @@ class DevicesDataTable extends React.Component {
         this.setState({
             data: null,
             modalDetail: !this.state.modalDetail
+        })
+    }
+
+    toggleOpenEdit = (row) => {
+        this.setState({
+            name: row.id,
+            newName: row.id,
+            counter: row.Counter,
+            modalEdit: !this.state.modalEdit
+        })
+    }
+
+    toggleCloseEdit = () => {
+        this.setState({
+            name: "",
+            counter: 0,
+            modalEdit: !this.state.modalEdit
         })
     }
 
@@ -91,6 +109,7 @@ class DevicesDataTable extends React.Component {
                     cookie.load('isAdmin') == "true" ?
                     <div>
                         <Button onClick={() => this.toggleOpenDetail(row)} size="sm" variant="primary"><i className="fa fa-info"></i>Detail</Button>
+                        <Button onClick={() => this.toggleOpenEdit(row)} size="sm" variant="success"><i className="fa fa-pencil"></i>Edit</Button>
                         <Button onClick={() => this.toggleOpenAssign(row)} size="sm" variant="warning"><i className="fa fa-user"></i>Assign</Button>
                         <Button onClick={() => this.toggleOpenDelete(row)} size="sm" variant="danger"><i className="fa fa-trash"></i>Delete</Button>
                     </div> :
@@ -151,6 +170,58 @@ class DevicesDataTable extends React.Component {
             }).catch(error => {
                 this.setState({isAdding: false})
                 return toast.error(error.message)
+            })
+        }
+    }
+
+    handleEdit = () => {
+        const { name, counter, newName } = this.state
+        const { dataDevice } = this.props
+
+        if(dataDevice.filter(x=>x.id.toLowerCase() == newName.toLowerCase()).length > 1){
+            return toast.error("Device name already registered!")
+        } else if(newName === "" || newName === null || newName === undefined){
+            return toast.error("Device name could not be empty!")
+        } else if(counter === null || counter === undefined){
+            return toast.error("Counter must be set!")
+        } else {
+            db.ref('/devices').once('value', snap => {
+                snap.forEach((snapChild) => {
+                    if(snapChild.val().id.toLowerCase() == name.toLowerCase()){
+                        this.setState({isEditing: true})
+                        var updates = {};
+                        let Obj = {
+                            ...snapChild.val(),
+                            id: newName,
+                            Counter: counter
+                        }
+                        updates['/devices/' + newName] = Obj
+                        db.ref().update(updates)
+                            .then(() => {
+                                if(name.toLowerCase() != newName.toLowerCase()){
+                                    db.ref(`/devices/${name}`)
+                                        .remove().then(() => {
+                                            this.setState({isEditing: false})
+
+                                            this.toggleCloseEdit()
+                                            return toast.success("Device successfully edited!")
+                                        }).catch(error => {
+                                            this.setState({isEditing: false})
+
+                                            return toast.error(error.message)
+                                        })
+                                } else {
+                                    this.setState({isEditing: false})
+                                    this.toggleCloseEdit()
+                                    return toast.success("Device succesfully edited!")
+                                }
+                            })
+                            .catch(error => {
+                                this.setState({isEditing: false})
+                                return toast.error(error.message)
+                            })
+                    }
+                })
             })
         }
     }
@@ -230,25 +301,27 @@ class DevicesDataTable extends React.Component {
             <BootstrapTable data={this.props.data} version="4" striped hover pagination search searchPlaceholder={"Search by device id or timestamp..."} edit options={options} selectRow={selectRow} exportCSV={true} csvFileName={this.fileNameFormat} expandableRow={this.isExpandableRow} expandComponent={this.expandComponent} expandColumnOptions={{expandColumnVisible: false}} >
                 <TableHeaderColumn dataField="id" isKey dataSort csvHeader="ID" hidden searchable={false}>ID</TableHeaderColumn>
                 <TableHeaderColumn dataField="no" dataSort csvHeader="No" thStyle={ { whiteSpace: 'normal' } } tdStyle={ { whiteSpace: 'normal' } } width="5%" searchable={false}>No</TableHeaderColumn>
-                <TableHeaderColumn dataField="id" dataSort csvHeader="Device ID" thStyle={ { whiteSpace: 'normal' } } tdStyle={ { whiteSpace: 'normal' } } searchable width="15%">Device Name</TableHeaderColumn>
+                <TableHeaderColumn dataField="id" dataSort csvHeader="Device ID" thStyle={ { whiteSpace: 'normal' } } tdStyle={ { whiteSpace: 'normal' } } searchable width="10%">Device Name</TableHeaderColumn>
                 <TableHeaderColumn dataField="Time" dataSort csvHeader="Date" dataFormat={this.dateFormat} thStyle={ { whiteSpace: 'normal' } } tdStyle={ { whiteSpace: 'normal' } } searchable width="10%">Date</TableHeaderColumn>
                 <TableHeaderColumn dataField="Time" dataSort csvHeader="Time" dataFormat={this.timeFormat} thStyle={ { whiteSpace: 'normal' } } tdStyle={ { whiteSpace: 'normal' } } searchable width="10%">Time</TableHeaderColumn>
                 <TableHeaderColumn dataField="Counter" dataSort csvHeader="Counter" thStyle={ { whiteSpace: 'normal' } } tdStyle={ { whiteSpace: 'normal' } } searchable>Counter</TableHeaderColumn>
                 <TableHeaderColumn dataField="Number" dataSort csvHeader="Number" thStyle={ { whiteSpace: 'normal' } } tdStyle={ { whiteSpace: 'normal' } } searchable={false}>Number</TableHeaderColumn>
                 <TableHeaderColumn dataField="postingTime" dataSort csvHeader="Posting Time" thStyle={ { whiteSpace: 'normal' } } tdStyle={ { whiteSpace: 'normal' } } searchable={false} width="10%">Posting Time</TableHeaderColumn>
                 <TableHeaderColumn dataField="readingTime" dataSort csvHeader="Reading Time" thStyle={ { whiteSpace: 'normal' } } tdStyle={ { whiteSpace: 'normal' } } searchable={false} width="10%">Reading Time</TableHeaderColumn>
-                <TableHeaderColumn dataAlign="center" dataField='action' export={false} dataFormat={ this.ActionFormatter.bind(this) } thStyle={ { whiteSpace: 'normal', width: 400 } } tdStyle={ { whiteSpace: 'normal', width: 400 } } searchable={false} expandable={ false }>Action</TableHeaderColumn>
+                <TableHeaderColumn dataAlign="center" dataField='action' export={false} dataFormat={ this.ActionFormatter.bind(this) } thStyle={ { whiteSpace: 'normal', width: 450 } } tdStyle={ { whiteSpace: 'normal', width: 450 } } searchable={false} expandable={ false }>Action</TableHeaderColumn>
             </BootstrapTable>
         )
     }
 
     render(){
-        const { modalAdd, modalAssign, modalDelete, isAdding, isAssigning, isDeleting, name, counter, data, selectedUser } = this.state
-        const { users, userOptions, userProgress } = this.props
+        const { modalAdd, modalEdit, modalAssign, modalDelete, isAdding, isEditing, isAssigning, isDeleting, name, counter, data, selectedUser, newName } = this.state
+        const { users, userOptions, userProgress, deviceProgress } = this.props
 
         return(
             <div>
-                {this.showTable()}
+                {
+                    deviceProgress || userProgress ? <center><BeatLoader color={'#1de9b6'} loading={deviceProgress || userProgress} /><br /> Loading.... Please wait...</center> : this.showTable()
+                }
 
                 {/* Modal Add */}
                 <Modal show={modalAdd} onHide={this.toggleCloseAdd}>
@@ -273,6 +346,34 @@ class DevicesDataTable extends React.Component {
                         Close
                     </Button>
                     <Button variant="success" size="sm" disabled={!name || !counter || isAdding} onClick={this.handleAdd}>
+                        Submit
+                    </Button>
+                    </Modal.Footer>
+                </Modal>
+
+                {/* Modal Edit */}
+                <Modal show={modalEdit} onHide={this.toggleCloseEdit}>
+                    <Modal.Header closeButton>
+                    <Modal.Title>Edit Device</Modal.Title>
+                    </Modal.Header>
+                    <Modal.Body>
+                        <Form>
+                            <Form.Group controlId="name">
+                                <Form.Label>Device Name</Form.Label>
+                                <Form.Control type="text" placeholder="Device-01" onChange={e => this.setState({newName: e.target.value})} value={newName} autoComplete="off" required />
+                            </Form.Group>
+
+                            <Form.Group controlId="counter">
+                                <Form.Label>Current Counter</Form.Label>
+                                <Form.Control type="number" placeholder="0-255" onChange={e => this.setState({counter: e.target.value})} value={counter} autoComplete="off" required />
+                            </Form.Group>
+                        </Form>
+                    </Modal.Body>
+                    <Modal.Footer>
+                    <Button variant="secondary" size="sm" onClick={this.toggleCloseEdit}>
+                        Close
+                    </Button>
+                    <Button variant="success" size="sm" disabled={!name || !counter || isEditing} onClick={this.handleEdit}>
                         Submit
                     </Button>
                     </Modal.Footer>

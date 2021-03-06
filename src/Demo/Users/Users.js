@@ -42,9 +42,7 @@ class Users extends React.Component {
                                 <Card.Title as='h5'>Users Management</Card.Title>
                             </Card.Header>
                             <Card.Body>
-                                {
-                                    !userProgress ? <UsersDataTable data={users} /> : <center><BarLoader color={'#123abc'} loading={userProgress} /></center>
-                                }
+                                <UsersDataTable data={users} />
                             </Card.Body>
                         </Card>
                     </Col>

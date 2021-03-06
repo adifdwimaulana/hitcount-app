@@ -7,7 +7,10 @@ import cookie from 'react-cookies'
 import Select from 'react-select'
 import { connect } from 'react-redux'
 import { toast } from 'react-toastify'
+import { BeatLoader } from 'react-spinners'
 import { db, auth } from '../../config/firebaseConfig'
+
+import { fetchUsers } from '../../redux/actions/users/list'
 
 class UsersDataTable extends React.Component {
     constructor(props){
@@ -160,8 +163,9 @@ class UsersDataTable extends React.Component {
                     admin,
                 }).then(() => console.log("Push Data Success!"))
                 this.setState({isAdding: false})
+                this.props.fetchUsers()
                 this.toggleCloseAdd()
-                
+
                 return toast.success("User Successfully Added")
             }).catch(error => {
                 this.setState({isAdding: false})
@@ -179,6 +183,7 @@ class UsersDataTable extends React.Component {
             .updatePassword(password)
             .then(() => {
                 this.setState({isChanging: false})
+                this.props.fetchUsers()
                 this.toggleCloseChangePassword()
 
                 return toast.success("Password has been successfully changed!")
@@ -198,8 +203,9 @@ class UsersDataTable extends React.Component {
         db.ref(`/users/${data.uid}`)
             .remove().then(() => {
                 this.setState({isDeleting: false})
-
+                this.props.fetchUsers()
                 this.toggleCloseDelete()
+
                 return toast.success("User successfully deleted!")
             }).catch(error => {
                 this.setState({isDeleting: false})
@@ -222,9 +228,12 @@ class UsersDataTable extends React.Component {
     render(){
         const { firstName, lastName, email, password, confirmPassword, role, data,
                 modalAdd, modalChangePassword, modalDelete, isAdding, isChanging, isDeleting } = this.state
+        const { userProgress } = this.props
         return(
             <div>
-                {this.showTable()}
+                {
+                    userProgress ? <center><BeatLoader color={'#1de9b6'} loading={userProgress} /><br /> Loading.... Please wait...</center> : this.showTable()
+                }
 
                 {/* Modal Add */}
                 <Modal show={modalAdd} onHide={this.toggleCloseAdd}>
@@ -336,4 +345,14 @@ class UsersDataTable extends React.Component {
     }
 }
 
-export default UsersDataTable
+const mapStateToProps = state => {
+    return {
+        users: state.userStore.users,
+        userOptions: state.userStore.userOptions,
+        adminCount: state.userStore.adminCount,
+        userCount: state.userStore.userCount,
+        userProgress: state.userStore.inProgress
+    }
+}
+
+export default connect(mapStateToProps, {fetchUsers})(UsersDataTable)
